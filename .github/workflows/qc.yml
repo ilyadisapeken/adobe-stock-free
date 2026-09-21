@@ -2,6 +2,12 @@ name: Adobe Stock QC
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "generated/*.jpg"
+      - "generated/*.jpeg"
+      - "generated/*.JPG"
+      - "generated/*.JPEG"
 
 jobs:
   qc:
@@ -20,7 +26,41 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Check project
+      - name: Check generated images
         run: |
-          python -m py_compile qc/check_image.py
-          echo "QC script berhasil dipasang."
+          mkdir -p ready rejected
+
+          found=0
+
+          for file in generated/*.jpg generated/*.jpeg generated/*.JPG generated/*.JPEG; do
+            if [ -f "$file" ]; then
+              found=1
+
+              echo "================================"
+              echo "Checking: $file"
+              echo "================================"
+
+              python qc/check_image.py "$file"
+
+              if [ $? -eq 0 ]; then
+                cp "$file" ready/
+                echo "✅ READY: $file"
+              else
+                cp "$file" rejected/
+                echo "❌ REJECTED: $file"
+              fi
+            fi
+          done
+
+          if [ "$found" -eq 0 ]; then
+            echo "Tidak ada gambar JPEG di generated/"
+          fi
+
+      - name: Upload QC results
+        uses: actions/upload-artifact@v4
+        with:
+          name: adobe-stock-qc-results
+          path: |
+            ready/
+            rejected/
+          if-no-files-found: ignore
