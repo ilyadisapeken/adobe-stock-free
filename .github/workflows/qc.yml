@@ -1,13 +1,10 @@
 name: Adobe Stock QC
 
 on:
-  workflow_dispatch:
   push:
     paths:
-      - "generated/*.jpg"
-      - "generated/*.jpeg"
-      - "generated/*.JPG"
-      - "generated/*.JPEG"
+      - "generated/**"
+  workflow_dispatch:
 
 jobs:
   qc:
@@ -26,19 +23,13 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Prepare folders
+        run: |
+          mkdir -p ready
+          mkdir -p rejected
+
       - name: Check generated images
-            - name: Create metadata
         run: |
-          python qc/create_metadata.py
-
-      - name: Upload metadata
-        uses: actions/upload-artifact@v4
-        with:
-          name: adobe-stock-metadata
-          path: metadata.json
-        run: |
-          mkdir -p ready rejected
-
           found=0
 
           for file in generated/*.jpg generated/*.jpeg generated/*.JPG generated/*.JPEG; do
@@ -49,14 +40,12 @@ jobs:
               echo "Checking: $file"
               echo "================================"
 
-              python qc/check_image.py "$file"
-
-              if [ $? -eq 0 ]; then
+              if python qc/check_image.py "$file"; then
                 cp "$file" ready/
-                echo "✅ READY: $file"
+                echo "READY: $file"
               else
                 cp "$file" rejected/
-                echo "❌ REJECTED: $file"
+                echo "REJECTED: $file"
               fi
             fi
           done
@@ -65,11 +54,16 @@ jobs:
             echo "Tidak ada gambar JPEG di generated/"
           fi
 
+      - name: Create metadata
+        run: |
+          python qc/create_metadata.py
+
       - name: Upload QC results
         uses: actions/upload-artifact@v4
         with:
-          name: adobe-stock-qc-results
+          name: adobe-stock-results
           path: |
             ready/
             rejected/
+            metadata.json
           if-no-files-found: ignore
