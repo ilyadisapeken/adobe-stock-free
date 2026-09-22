@@ -1,1 +1,2 @@
 Pillow
+gradio_client
