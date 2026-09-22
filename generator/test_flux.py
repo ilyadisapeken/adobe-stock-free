@@ -8,10 +8,10 @@ SPACE = "black-forest-labs/FLUX.1-schnell"
 PROMPT = """
 Professional commercial stock photograph of an Indonesian small business owner
 working at a clean modern desk with a laptop, smartphone, product packaging and
-notebook, natural morning light, realistic Southeast Asian appearance, authentic
-modern workspace, professional business atmosphere, subtle depth of field,
-high detail, sharp focus, natural skin texture, no logos, no brands, no text,
-no watermark
+notebook, natural morning light, realistic Southeast Asian appearance,
+authentic modern workspace, professional business atmosphere,
+subtle depth of field, high detail, sharp focus, natural skin texture,
+no logos, no brands, no text, no watermark
 """.strip()
 
 OUTPUT_DIR = Path("generated")
@@ -23,7 +23,11 @@ if not token:
     raise RuntimeError("HF_TOKEN belum tersedia.")
 
 print("Menghubungkan ke Hugging Face...")
-client = Client(SPACE, hf_token=token)
+
+client = Client(
+    SPACE,
+    token=token
+)
 
 print("Mengirim prompt ke FLUX...")
 
